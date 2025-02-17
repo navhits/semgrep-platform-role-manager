@@ -1,0 +1,29 @@
+{
+    "users": {
+        "8941c665e45ccd53c9d59d54f31ea3b005fd7ff7291e00f1289ccfe8ab020dab": {
+            "id": "3",
+            "name": "Aadhya",
+            "permission": "ORG_ROLE_ADMIN",
+            "exception": true
+        },
+        "3065539ce02142b5e56175cf93eda8249cd6b044e66adb1a28b138e02324c386": {
+            "id": "10",
+            "name": "Aarav",
+            "permission": "ORG_ROLE_ADMIN",
+            "exception": false,
+            "until": "2025-02-19T10:49:56.951337+00:00"
+        },
+        "816d719ed8afdcb55208f274841ab25b1ac6d8000492767dc210ecb219fdfc1f": {
+            "id": "11",
+            "name": "Anaya",
+            "permission": "ORG_ROLE_MEMBER"
+        },
+        "a0c6b1f0ac68a6f7bc06871045a996c72b826c09974dc8d15dae3d8183ee0150": {
+            "id": "10",
+            "name": "Anush",
+            "permission": "ORG_ROLE_ADMIN",
+            "exception": false,
+            "until": "2025-10-01T12:32:16.951337+00:00"
+        }
+    }
+}
