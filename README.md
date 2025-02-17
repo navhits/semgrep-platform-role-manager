@@ -26,4 +26,5 @@ There is not audit log available. Changes are not tracked. So if anyone just goe
     * We can think about another automation with Selenium for this. But I'd honestly be happy if Semgrep folks just allow the using the regular token.
     * Beyond happy if you just solve the role and audit log problem
 3. Make sure only select folks can run the GitHub workflows or set approvals for these
-4. Make sure to protect the branch where the data will be. So only a specific user can make changes to that branch and no one else.
+4. Make sure to protect the branch where the data will be. So only a specific user can make changes to that branch and no one else
+5. Create a GitHub PAT with repo write and workflow permissions. Make sure this user is added to the bypass list of the protected branch. Its even better if this token is from a non human account.
