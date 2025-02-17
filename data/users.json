@@ -1,4 +1,10 @@
 {
     "users": {
+        "8941c665e45ccd53c9d59d54f31ea3b005fd7ff7291e00f1289ccfe8ab020dab": {
+            "id": "2524",
+            "name": "Naveen S",
+            "permission": "ORG_ROLE_ADMIN",
+            "exception": true
+        }
     }
 }
