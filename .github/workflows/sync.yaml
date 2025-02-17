@@ -1,0 +1,51 @@
+name: "Sync users"
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+concurrency: sync
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+    
+      - name: Merge script branch into protected branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git pull origin data --rebase
+
+          git merge --no-ff --no-commit main || echo "No changes to merge"
+
+      - name: Run sync script
+        run: |
+          python src/sync.py
+        env:
+          SEMGREP_HOST: ${{ vars.SEMGREP_HOST }}
+          SEMGREP_TOKEN: ${{ secrets.SEMGREP_TOKEN }}
+          SEMGREP_DEPLOYMENT_ID: ${{ vars.SEMGREP_DEPLOYMENT_ID }}
+          SEMGREP_DEFAULT_ADMIN_DAYS: ${{ vars.SEMGREP_DEFAULT_ADMIN_DAYS }}
+          SEMGREP_HONOR_PLATFORM_ADMIN: ${{ vars.SEMGREP_HONOR_PLATFORM_ADMIN }}
+
+      - name: Commit changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            git add data
+            git commit -m "Update file via GitHub Actions"
+            git push origin data
+          else
+            echo "No changes detected, skipping commit."
+          fi
