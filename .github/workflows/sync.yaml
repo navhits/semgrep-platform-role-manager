@@ -32,7 +32,11 @@ jobs:
 
       - name: Run sync script
         run: |
+          # Sync users from Semgrep platform to GitHub
           python src/sync.py
+
+          # Remove time based admins if their time has expired
+          python src/expire.py
         env:
           SEMGREP_HOST: ${{ vars.SEMGREP_HOST }}
           SEMGREP_TOKEN: ${{ secrets.SEMGREP_TOKEN }}
