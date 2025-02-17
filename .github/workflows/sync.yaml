@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: data
+          ref: users
           token: ${{ secrets.GH_PAT }}
 
       - name: Set up Python
@@ -26,9 +26,12 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          git pull origin data --rebase
+          git fetch origin main
+          git checkout main
 
-          git merge --no-ff --no-commit main || echo "No changes to merge"
+          git checkout users
+          git checkout main -- .
+          git checkout users -- data/users.json
 
       - name: Run sync script
         run: |
@@ -46,10 +49,7 @@ jobs:
 
       - name: Commit changes
         run: |
-          if [[ -n $(git status --porcelain) ]]; then
-            git add data
-            git commit -m "Update file via GitHub Actions"
-            git push origin data
-          else
-            echo "No changes detected, skipping commit."
-          fi
+          git restore --staged .
+          git add data/users.json
+          git commit -m "Update file via GitHub Actions"
+          git push origin users
