@@ -48,8 +48,8 @@ def update_permissions(file_path: str, user_id: str, name: str,
                 # Always false when upgrading to admin
                 # This is because if someone was made admin from the platform
                 # without consent or approval, then their role must change back automatically
-                # You can change this behaviour by setting SEMGREP_HONOR_PLATFORM_ADMIN to true
-                if os.getenv("SEMGREP_HONOR_PLATFORM_ADMIN"):
+                # You can change this behaviour by setting SEMGREP_HONOR_UKNONWN_PLATFORM_ADMIN to true
+                if os.getenv("SEMGREP_HONOR_UKNONWN_PLATFORM_ADMIN"):
                     data["users"][user_hash]["exception"] = True
                 else:
                     data["users"][user_hash]["exception"] = False
