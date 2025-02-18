@@ -1,0 +1,40 @@
+name: "Update Role Request"
+description: Form to request a role update
+title: "Update Role Request"
+body:
+  - type: input
+    id: email
+    attributes:
+      label: "Email"
+      description: Your email ID
+      placeholder: ex. example@email.com
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: "Role"
+      description: What role do you need?
+      options:
+        - Admin
+        - Member
+    validations:
+      required: true
+  - type: input
+    id: days
+    attributes:
+      label: "No. of days required (if admin only)"
+      description: Number of days you need admin role
+      placeholder: ex. 5
+    validations:
+      required: false
+  - type: dropdown
+    id: exception
+    attributes:
+      label: "Admin role needed forever? "
+      description: If you need admin role forever, select Yes
+      options:
+        - Yes
+        - No
+    validations:
+      required: false

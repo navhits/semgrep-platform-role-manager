@@ -1,0 +1,127 @@
+name: "Update roles"
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  check-issue-label:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.issue.pull_request == null &&
+      startsWith(github.event.comment.body, '/update-role') &&
+      contains(fromJSON('["navhits"]'), github.event.comment.user.login)
+
+    steps:
+      - name: Extract Inputs from Issue
+        id: extract-inputs
+        run: |
+          ISSUE_BODY="${{ github.event.issue.body }}"
+          EMAIL_REGEX="([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})"
+
+          # Extract Email
+          EMAIL=$(echo "$ISSUE_BODY" | grep -A 2 "### Email" | tail -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+          if [[ ! "$EMAIL" =~ $EMAIL_REGEX ]]; then
+            echo "Invalid email address: $EMAIL"
+            exit 1
+          fi
+
+          echo "EMAIL=$EMAIL" >> $GITHUB_ENV
+
+          # Extract Role
+          ROLE=$(echo "$ISSUE_BODY" | grep -A 2 "### Role" | tail -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          if $ROLE == "Admin"; then
+            ROLE="ORG_ROLE_ADMIN"
+          else
+            ROLE="ORG_ROLE_MEMBER"
+          fi
+          echo "ROLE=$ROLE" >> $GITHUB_ENV
+
+          if $ROLE == "ORG_ROLE_ADMIN"; then
+            # Extract No. of days required
+            DAYS_REQUIRED=$(echo "$ISSUE_BODY" | grep -A 2 "### No. of days required" | tail -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+            # Extract if Admin role is forever
+            ADMIN_FOREVER=$(echo "$ISSUE_BODY" | grep -A 2 "### Admin role needed forever?" | tail -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            if $ADMIN_FOREVER == "Yes"; then
+                ADMIN_FOREVER="true"
+                DAYS_REQUIRED="NA"
+            else
+                ADMIN_FOREVER="NA"
+            fi
+          else
+            DAYS_REQUIRED="NA"
+            ADMIN_FOREVER="NA"
+          fi
+          echo "DAYS_REQUIRED=$DAYS_REQUIRED" >> $GITHUB_ENV
+          echo "ADMIN_FOREVER=$ADMIN_FOREVER" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v4
+        with:
+          ref: users
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+
+      - name: Merge script branch into protected branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin main
+          git checkout main
+
+          git checkout users
+          git checkout main -- .
+          git checkout users -- data/users.json
+
+      - name: Update Role
+        run: |
+          if $ROLE == "ORG_ROLE_ADMIN"; then
+            if $ADMIN_FOREVER == "true"; then
+              python update.py $EMAIL $ROLE exception=true || true
+            else
+              python update.py $EMAIL $ROLE days=$DAYS_REQUIRED || true
+            fi
+          else
+            python update.py $EMAIL $ROLE || true
+          fi
+          STATUS_CODE=$?
+          echo "STATUS_CODE=$STATUS_CODE" >> $GITHUB_ENV
+        env:
+          SEMGREP_HOST: ${{ vars.SEMGREP_HOST }}
+          SEMGREP_TOKEN: ${{ secrets.SEMGREP_TOKEN }}
+          SEMGREP_DEPLOYMENT_ID: ${{ vars.SEMGREP_DEPLOYMENT_ID }}
+          SEMGREP_DEFAULT_ADMIN_DAYS: ${{ vars.SEMGREP_DEFAULT_ADMIN_DAYS }}
+          SEMGREP_HONOR_UKNONWN_PLATFORM_ADMIN: ${{ vars.SEMGREP_HONOR_UKNONWN_PLATFORM_ADMIN }}
+
+      - name: Commit changes
+        run: |
+          git restore --staged .
+          git add data/users.json
+          git commit -m "Update file via GitHub Actions"
+          git push origin users
+
+      - name: Comment on Issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const statusCode = process.env.STATUS_CODE;
+            let message = "";
+            if (statusCode === "success") {
+              message = `✅ Role update request processed successfully.\n\n- **Email**: ${{ env.EMAIL }}\n- **Role**: ${{ env.ROLE }}\n- **Days Required**: ${{ env.DAYS_REQUIRED }}\n- **Admin Forever**: ${{ env.ADMIN_FOREVER }}`;
+            } else {
+              message = `❌ Role update request failed. Please check the logs.\n\n- **Email**: ${{ env.EMAIL }}\n- **Role**: ${{ env.ROLE }}`;
+            }
+
+            github.issues.createComment({
+              issue_number: ${{ github.event.issue.number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            })
