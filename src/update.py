@@ -6,6 +6,29 @@ from commons import (USER_DATA, check_env, hash_str, load_json, save_json,
                      update_membership)
 
 
+def find_user(file_path: str, email: str) -> tuple[str | None, str | None]:
+    """find_user will search for a user in the user data file
+
+    Args:
+        file_path (str): The path to the user data file
+        email (str): The email of the user to search for
+
+    Returns:
+        tuple[str | None, str | None]: A tuple containing the user ID and name if the user is found, otherwise None
+    """
+    data = load_json(file_path)
+    user_hash = hash_str(email)
+
+    if user_hash in data["users"]:
+        user_info = data["users"][user_hash]
+        print(
+            f"User found: ID = {user_info['id']}, Name = {user_info['name']}")
+        return user_info['id'], user_info['name']
+    else:
+        print(f"User not found")
+        return None, None
+
+
 def update_permission(email: str, user_id: str, name: str, permission: str,
                       is_exception: bool = False, days: Optional[int] = None,
                       file_path: str = USER_DATA) -> None:
@@ -94,23 +117,23 @@ def update_permission(email: str, user_id: str, name: str, permission: str,
 
 if __name__ == "__main__":
     check_env()
-    
-    if len(sys.argv) < 5:
+
+    if len(sys.argv) < 3:
         print(
-            "Usage: python update.py <email> <id> <name> <permission: ORG_ROLE_ADMIN|ORG_ROLE_MEMBER> [exception=<true/false>] [days=<number>]"
+            "Usage: python update.py <email> <permission: ORG_ROLE_ADMIN|ORG_ROLE_MEMBER> [exception=<true/false>] [days=<number>]"
         )
         sys.exit(1)
 
     email_id: str = sys.argv[1]
-    user_id: str = sys.argv[2]
-    user_name: str = sys.argv[3]
-    permission_type: str = sys.argv[4]
+    permission_type: str = sys.argv[2]
 
     kwargs = {}
-    for arg in sys.argv[5:]:
+    for arg in sys.argv[3:]:
         if arg.startswith("exception="):
             kwargs["is_exception"] = arg.split("=")[1].lower() == "true"
         elif arg.startswith("days="):
             kwargs["days"] = int(arg.split("=")[1])
+
+    user_id, user_name = find_user(USER_DATA, email_id.strip())
 
     update_permission(email_id, user_id, user_name, permission_type, **kwargs)
