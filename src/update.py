@@ -6,7 +6,7 @@ from commons import (USER_DATA, check_env, hash_str, load_json, save_json,
                      update_membership)
 
 
-def find_user(file_path: str, email: str) -> tuple[str | None, str | None]:
+def find_user(file_path: str, email: str) -> tuple[str, str]:
     """find_user will search for a user in the user data file
 
     Args:
@@ -14,7 +14,10 @@ def find_user(file_path: str, email: str) -> tuple[str | None, str | None]:
         email (str): The email of the user to search for
 
     Returns:
-        tuple[str | None, str | None]: A tuple containing the user ID and name if the user is found, otherwise None
+        tuple[str, str]: A tuple containing the user ID and name if the user is found
+
+    Raises:
+        SystemExit: If the user is not found
     """
     data = load_json(file_path)
     user_hash = hash_str(email)
@@ -26,7 +29,7 @@ def find_user(file_path: str, email: str) -> tuple[str | None, str | None]:
         return user_info['id'], user_info['name']
     else:
         print(f"User not found")
-        return None, None
+        sys.exit(1)
 
 
 def update_permission(email: str, user_id: str, name: str, permission: str,
@@ -116,7 +119,7 @@ def update_permission(email: str, user_id: str, name: str, permission: str,
 
 
 if __name__ == "__main__":
-    check_env()
+    # check_env()
 
     if len(sys.argv) < 3:
         print(
