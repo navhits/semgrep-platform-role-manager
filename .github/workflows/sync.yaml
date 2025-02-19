@@ -50,6 +50,14 @@ jobs:
       - name: Commit changes
         run: |
           git restore --staged .
-          git add data/users.json
-          git commit -m "Update file via GitHub Actions"
-          git push origin users
+
+          FILE="data/users.json"
+          git add $FILE
+
+          if git diff --cached --quiet "$FILE"; then
+              echo "No user changes detected."
+          else
+              git commit -m "Update file via GitHub Actions"
+              git push origin users
+              echo "Updated users file."
+          fi
